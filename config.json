@@ -1,0 +1,18 @@
+{
+  "responders": {
+    "file_responder": {
+      "active": true,
+      "file_path": "reports/system_report.json"
+    }
+  },
+  "modules": {
+    "resource_module": {
+      "active": true,
+      "limits": {
+        "cpu_percent": 80.0,
+        "ram_percent": 85.0,
+        "disk_percent": 90.0
+      }
+    }
+  }
+}
