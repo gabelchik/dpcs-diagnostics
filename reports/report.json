@@ -1,0 +1,57 @@
+{
+    "timestamp": "2026-07-19T09:07:58.900382",
+    "node_name": "rsu-node-01",
+    "status": "WARNING",
+    "modules": {
+        "integrity": {
+            "status": "SUCCESS",
+            "components": {
+                "executor": {
+                    "path": "./test/hello.py",
+                    "exists": true,
+                    "permissions_ok": true,
+                    "checksum_ok": true,
+                    "status": "OK"
+                },
+                "flow_control": {
+                    "path": "./core/interfaces.py",
+                    "exists": true,
+                    "permissions_ok": true,
+                    "checksum_ok": true,
+                    "status": "OK"
+                }
+            }
+        },
+        "environment": {
+            "status": "WARNING",
+            "processes_monitoring": {
+                "executor": false,
+                "node-flow-control": false,
+                "flow-collector": false
+            },
+            "ports_monitoring": {
+                "8000": true,
+                "1880": false,
+                "5005": false
+            },
+            "env_variables": {
+                "DPCS_ENV": false,
+                "PATH": true,
+                "DPCS_NODE_ROLE": false
+            }
+        },
+        "resources": {
+            "status": "SUCCESS",
+            "metrics": {
+                "cpu_percent": 0.0,
+                "ram_percent": 15.3,
+                "disk_percent": 1.5
+            },
+            "limits": {
+                "max_cpu": 80,
+                "max_ram": 85,
+                "max_disk": 90
+            }
+        }
+    }
+}

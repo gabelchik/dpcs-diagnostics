@@ -1,4 +1,4 @@
-import sys, json, datetime
+import json, datetime
 from typing import Dict, List, Any
 from core.interfaces import DiagnosticModule, ReportResponder
 from modules import MODULE_REGISTRY
@@ -14,6 +14,7 @@ class DiagnosticCore:
         self._active_responders: List[ReportResponder] = []
 
         self.load_config()
+
     def load_config(self) -> None:
         try:
             with open(self._config_path, "r", encoding="utf-8") as f:
@@ -29,7 +30,7 @@ class DiagnosticCore:
             if mod_cfg.get("active", False) and mod_key in MODULE_REGISTRY:
                 klass = MODULE_REGISTRY[mod_key]
                 try:
-                    self._active_modules.append(klass(mod_key, mod_cfg.get("limits", {})))
+                    self._active_modules.append(klass(mod_key, mod_cfg))
                     print(f"[INFO] Модуль '{mod_key}' успешно зарегистрирован")
 
                 except Exception as e:
@@ -48,39 +49,65 @@ class DiagnosticCore:
                 except Exception as e:
                     print(f"[ERROR] Не удалось инициализировать респондер {resp_key}: {e}")
 
-    def run(self) -> None:
-        if not self._active_modules:
-            print("[WARNING] Нет активных модулей для запуска")
-            return
+    def execute_diagnostics(self, target_modules: List[str] = None) -> dict:
+        modules_to_run = self._active_modules
 
-        print(f"[INFO] Запуск диагностики...")
+        if target_modules is not None:
+            modules_to_run = [
+                mod for mod in self._active_modules
+                if mod.name in target_modules
+            ]
+
+        if not modules_to_run:
+            print("[WARNING] Нет активных или подходящих модулей для запуска")
+            return {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "node_name": self._config.get("node_name", "unknown_node"),
+                "status": "WARNING",
+                "modules": {},
+                "message": "Диагностика не выявила модулей для запуска по указанным критериям"
+            }
+
+        print(f"[INFO] Запуск диагностики, всего модулей ({len(modules_to_run)})...")
         global_report = {
             "timestamp": datetime.datetime.now().isoformat(),
-            "status": "OK",
-            "results": {}
+            "node_name": self._config.get("node_name", "unknown_node"),
+            "status": "SUCCESS",
+            "modules": {},
         }
 
-        for module in self._active_modules:
+        statuses_pool = []
+
+        for module in modules_to_run:
             try:
                 module_report = module.execute()
-                global_report["results"][module.name] = module_report
-
-                if module_report.get("status") == "CRITICAL" and global_report.get("status") == "OK":
-                    global_report["status"] = "CRITICAl"
+                global_report["modules"][module.name] = module_report
+                statuses_pool.append(module_report.get("status"))
 
             except Exception as e:
                 print(f"[ERROR] Ошибка при работе модуля {module.name}: {e}")
-                global_report["reports"][module.name] = {
-                    "status": "ERROR",
-                    "error": str(e)
+                global_report["modules"][module.name] = {
+                    "status": "FAILURE",
                 }
-                if global_report.get("status") == "OK":
-                    global_report["status"] = "CRITICAL"
+                statuses_pool.append("FAILURE")
+
+        if "FAILURE" in statuses_pool:
+            global_report["status"] = "FAILURE"
+        elif "WARNING" in statuses_pool:
+            global_report["status"] = "WARNING"
+        else:
+            global_report["status"] = "SUCCESS"
 
         print(f"[INFO] Диагностика завершена. Статус системы: {global_report['status']}")
+
+        return global_report
+
+    def save_and_respond(self, report: dict) -> None:
+        print("[INFO] Оповещение респондеров и сохранение отчета")
+
         for responder in self._active_responders:
             try:
-                responder.send_report(global_report)
+                responder.send_report(report)
 
             except Exception as e:
                 print(f"[ERROR] Респондер не смог отправить отчет: {e}")
