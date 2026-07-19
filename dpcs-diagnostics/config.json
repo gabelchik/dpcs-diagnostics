@@ -1,0 +1,53 @@
+{
+  "node_name": "rsu-node-01",
+  "modules": {
+    "integrity": {
+      "active": true,
+      "registry": {
+        "executor": {
+          "path": "./test/hello.py",
+          "permissions": "0o644",
+          "sha256": "328c227145db0a41fd86de8672b750d6893a0179aa5581d959fedb5299d0f897"
+        },
+        "flow_control": {
+          "path": "./core/interfaces.py",
+          "permissions": "0o644",
+          "sha256": "0e7cbcb1923e48cba1ff913315815c62158945277cf520fa9449350597d2da09"
+        }
+      }
+    },
+    "environment": {
+      "active": true,
+      "required_processes": [
+        "executor",
+        "node-flow-control",
+        "flow-collector"
+      ],
+      "required_ports": [
+        8000,
+        1880,
+        5005
+      ],
+      "env_variables": [
+        "DPCS_ENV",
+        "PATH",
+        "DPCS_NODE_ROLE"
+      ],
+      "flow_settings_url": "http://flow-settings.local/api/v1/processes"
+    },
+    "resources": {
+      "active": true,
+      "limits": {
+        "max_cpu": 80,
+        "max_ram": 85,
+        "max_disk": 90
+      }
+    }
+  },
+  "responders": {
+    "file_responder": {
+      "active": true,
+      "file_path": "./reports/report.json"
+    }
+  }
+}
